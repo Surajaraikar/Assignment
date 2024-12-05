@@ -1,0 +1,379 @@
+<html>
+<head>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.min.css">
+    <script>
+
+
+function addPassage() {
+            const passage = document.getElementById('passage').value;
+            if (passage) {
+                alert('Passage added: ' + passage);
+            } else {
+                alert('Please enter a passage.');
+            }
+        }
+
+        function addQuestion() {
+            const questionsContainer = document.getElementById('questions-container');
+            const questionCount = questionsContainer.children.length + 1;
+
+            const questionDiv = document.createElement('div');
+            questionDiv.classList.add('mb-4');
+
+            const questionTitle = document.createElement('h3');
+            questionTitle.classList.add('text-xl', 'font-semibold', 'mb-2');
+            questionTitle.innerHTML = `${questionCount}. <input type="text" class="w-full p-2 border border-gray-300 rounded" placeholder="Enter your question here...">`;
+
+            const optionsList = document.createElement('ul');
+            optionsList.classList.add('list-disc', 'list-inside');
+
+            for (let i = 1; i <= 4; i++) {
+                const optionItem = document.createElement('li');
+                optionItem.classList.add('mb-2');
+                optionItem.innerHTML = `<input type="radio" name="question${questionCount}" class="mr-2"><input type="text" class="w-full p-2 border border-gray-300 rounded" placeholder="Option ${i}">`;
+                optionsList.appendChild(optionItem);
+            }
+
+            questionDiv.appendChild(questionTitle);
+            questionDiv.appendChild(optionsList);
+            questionsContainer.appendChild(questionDiv);
+        }
+
+        function submitComprehension() {
+            const passage = document.getElementById('passage').value;
+            const questionsContainer = document.getElementById('questions-container');
+            const questions = questionsContainer.children;
+
+            if (!passage) {
+                alert('Please enter a passage.');
+                return;
+            }
+
+            const submittedPassage = document.getElementById('submitted-passage');
+            submittedPassage.innerHTML = `<h3 class="text-xl font-semibold mb-2">Passage:</h3><p class="text-gray-700 mb-4">${passage}</p>`;
+
+            const submittedQuestions = document.getElementById('submitted-questions');
+            submittedQuestions.innerHTML = '';
+
+            for (let i = 0; i < questions.length; i++) {
+                const questionDiv = questions[i];
+                const questionInput = questionDiv.querySelector('h3 input');
+                const questionText = questionInput.value;
+
+                if (!questionText) {
+                    alert(`Please enter a question for Question ${i + 1}.`);
+                    return;
+                }
+
+                const options = questionDiv.querySelectorAll('ul li input[type="text"]');
+                const optionsText = [];
+                options.forEach(option => {
+                    optionsText.push(option.value);
+                });
+
+                const questionHTML = `
+                    <div class="mb-4">
+                        <h3 class="text-xl font-semibold mb-2">${i + 1}. ${questionText}</h3>
+                        <ul class="list-disc list-inside">
+                            ${optionsText.map((option, index) => `<li class="mb-2"><input type="radio" name="submittedQuestion${i + 1}" class="mr-2">${option}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+
+                submittedQuestions.innerHTML += questionHTML;
+            }
+
+            document.getElementById('result-section2').classList.remove('hidden');
+            document.getElementById('result-section2').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        
+        function createCategorizeTab() {
+            const categories = [];
+            const items = [];
+
+            document.querySelectorAll('.category-input').forEach(input => {
+                categories.push(input.value);
+            });
+
+            document.querySelectorAll('.item-input').forEach(input => {
+                items.push({
+                    name: input.querySelector('.item-name').value,
+                    category: input.querySelector('.item-category').value
+                });
+            });
+
+            const categorizeTab = document.getElementById('categorize-tab');
+            categorizeTab.innerHTML = `
+                <div class="flex justify-between items-center mb-4">
+                    <h1 class="text-lg font-semibold">Categorize the following</h1>
+                    <div class="flex items-center space-x-4">
+                        <i class="fas fa-bookmark text-xl"></i>
+                    </div>
+                </div>
+                <div id="items-container" class="flex flex-wrap gap-2 mb-4">
+                    ${items.map(item => `<button class="bg-gray-200 rounded-full px-4 py-2 draggable">${item.name}</button>`).join('')}
+                </div>
+                <div class="flex justify-around">
+                    ${categories.map(category => `
+                        <div class="flex flex-col items-center">
+                            <div class="bg-pink-200 rounded-t-lg px-4 py-2 mb-1">${category}</div>
+                            <div class="bg-pink-100 rounded-b-lg w-32 h-48 droppable"></div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            dragula([document.getElementById('items-container'), ...document.querySelectorAll('.droppable')]);
+            categorizeTab.classList.remove('hidden');
+            categorizeTab.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function updateCategoryOptions() {
+            const categories = [];
+            document.querySelectorAll('.category-input').forEach(input => {
+                categories.push(input.value);
+            });
+
+            document.querySelectorAll('.item-category').forEach(select => {
+                select.innerHTML = `<option>Choose Category</option>`;
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    select.appendChild(option);
+                });
+            });
+        }
+
+        function addItem() {
+            const itemContainer = document.createElement('div');
+            itemContainer.className = 'item-input flex items-center mb-2';
+            itemContainer.innerHTML = `
+                <i class="fas fa-bars text-xl mr-2"></i>
+                <input type="text" class="item-name border rounded w-full px-4 py-2" placeholder="Item">
+                <select class="item-category border rounded ml-2 px-4 py-2">
+                    <option>Choose Category</option>
+                </select>
+            `;
+            document.getElementById('items-list').appendChild(itemContainer);
+            updateCategoryOptions();
+        }
+
+        function addCategory() {
+            const categoryContainer = document.createElement('input');
+            categoryContainer.className = 'category-input border rounded w-full px-4 py-2 mb-2';
+            categoryContainer.placeholder = 'Category';
+            categoryContainer.oninput = updateCategoryOptions;
+            document.getElementById('categories-list').appendChild(categoryContainer);
+            updateCategoryOptions();
+        }
+
+        function resetItems() {
+            const itemsContainer = document.getElementById('items-container');
+            const items = Array.from(itemsContainer.querySelectorAll('.draggable'));
+            items.forEach(item => itemsContainer.appendChild(item));
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            dragula([document.getElementById('items-list')]);
+        });
+
+
+        function addOption() {
+            const optionsContainer = document.getElementById('options-container');
+            const optionCount = optionsContainer.children.length + 1;
+            const optionDiv = document.createElement('div');
+            optionDiv.className = 'mb-4 flex items-center space-x-2';
+            optionDiv.innerHTML = `
+                <i class="fas fa-grip-vertical text-gray-400"></i>
+                <input type="text" class="border border-gray-300 rounded-md p-2 flex-1" placeholder="Option ${optionCount}">
+                <i class="fas fa-times text-gray-400 cursor-pointer" onclick="removeOption(this)"></i>
+            `;
+            optionsContainer.appendChild(optionDiv);
+        }
+
+        function removeOption(element) {
+            element.parentElement.remove();
+        }
+
+        function showPreview() {
+            const sentence = document.getElementById('sentence-input').value;
+            const options = Array.from(document.querySelectorAll('#options-container input')).map(input => input.value);
+            const sentenceWithBlanks = sentence.replace(/\[([^\]]+)\]/g, '<span class="border-b border-dashed border-gray-400 inline-block w-20 h-6"></span>');
+            const previewContainer = document.getElementById('preview-container');
+            previewContainer.innerHTML = `
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-medium mb-1">Sentence</label>
+                    <div class="border border-gray-300 rounded-md p-2 bg-gray-100" id="sentence-preview">
+                        ${sentenceWithBlanks}
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700 font-medium mb-1">Options</label>
+                    <ul class="list-disc pl-5" id="options-preview">
+                        ${options.map((option, index) => `<li>${option}</li>`).join('')}
+                    </ul>
+                </div>
+                <button onclick="submitAnswers()" class="bg-blue-500 text-white px-4 py-2 rounded-md">Submit</button>
+            `;
+            previewContainer.classList.remove('hidden');
+            previewContainer.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function submitAnswers() {
+            const sentencePreview = document.getElementById('sentence-preview');
+            const filledSentence = sentencePreview.innerHTML;
+            alert(`Submitted Sentence: ${filledSentence}`);
+        }
+
+
+    </script>
+</head>
+<body class="bg-blue-300 flex flex-col items-center justify-center min-h-screen space-y-8">
+    <h1 class="text-4xl font-bold text-gray-800 pt-10">Categorize App</h1>
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-3xl">
+        <div class="flex justify-between items-center mb-4 relative">
+            <div class="flex items-center space-x-2">
+            </div>
+            <label class="block absolute">Description Text</label>
+            <div class="flex items-center space-x-4">
+                <p class="border border-gray-300 rounded-md p-1 text-gray-700">
+                    Categorization
+                 </p>
+            </div>
+        </div>
+        <div class="mb-4">
+            <input type="text" placeholder="Enter text here....." class="border rounded w-full px-4 py-2">
+        </div>
+        <div class="mb-4">
+            <label class="block mb-2">Media</label>
+            <select class="border rounded w-full px-4 py-2">
+                <option>None</option>
+            </select>
+        </div>
+        <div class="mb-4">
+            <label class="block mb-2">Categories</label>
+            <div id="categories-list">
+                <input type="text" class="category-input border rounded w-full px-4 py-2 mb-2" placeholder="Category 1" oninput="updateCategoryOptions()">
+                <input type="text" class="category-input border rounded w-full px-4 py-2" placeholder="Category 2" oninput="updateCategoryOptions()">
+            </div>
+            <button onclick="addCategory()" class="bg-blue-500 text-white rounded px-4 py-2 mt-2">Add Category</button>
+        </div>
+        <div class="mb-4">
+            <label class="block mb-2">Items</label>
+            <div id="items-list" class="space-y-2">
+                <div class="item-input flex items-center mb-2">
+                    <i class="fas fa-bars text-xl mr-2"></i>
+                    <input type="text" class="item-name border rounded w-full px-4 py-2" placeholder="Item 1">
+                    <select class="item-category border rounded ml-2 px-4 py-2">
+                        <option>Choose Category</option>
+                    </select>
+                </div>
+                <div class="item-input flex items-center mb-2">
+                    <i class="fas fa-bars text-xl mr-2"></i>
+                    <input type="text" class="item-name border rounded w-full px-4 py-2" placeholder="Item 2">
+                    <select class="item-category border rounded ml-2 px-4 py-2">
+                        <option>Choose Category</option>
+                    </select>
+                </div>
+            </div>
+            <button onclick="addItem()" class="bg-blue-500 text-white rounded px-4 py-2 mt-2">Add Item</button>
+        </div>
+        <button onclick="createCategorizeTab()" class="bg-blue-500 text-white rounded px-4 py-2">Submit</button>
+    </div>
+
+    <div id="categorize-tab" class="bg-white rounded-lg shadow-lg p-6 w-full max-w-3xl hidden">
+        <!-- Categorize the following tab will be created here -->
+    </div>
+
+
+    <h1 class="text-4xl font-bold text-gray-800 pt-10">Cloze App</h1>
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-3xl m-6">
+        <header class="text-center mb-8">
+        <div class="flex items-center justify-between mb-4">
+            <div class="flex items-center space-x-2">
+             
+               
+            </div>
+            <div class="flex items-center space-x-2">
+                <p class="border border-gray-300 rounded-md p-1 text-gray-700">
+                   Cloze
+                </p>
+                
+            </div>
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 font-medium mb-1">Sentence<span class="text-red-500">*</span></label>
+            <input type="text" id="sentence-input" class="border border-gray-300 rounded-md p-2 w-full" placeholder="Use [option] to create blanks.">
+        </div>
+        <div class="mb-4">
+            <label class="block text-gray-700 font-medium mb-1">Media</label>
+            <select class="border border-gray-300 rounded-md p-2 w-full">
+                <option>None</option>
+            </select>
+        </div>
+        <div id="options-container">
+            <div class="mb-4 flex items-center space-x-2">
+                <i class="fas fa-grip-vertical text-gray-400"></i>
+                <input type="text" class="border border-gray-300 rounded-md p-2 flex-1" placeholder="Option 1">
+                <i class="fas fa-times text-gray-400 cursor-pointer" onclick="removeOption(this)"></i>
+            </div>
+        </div>
+        <button onclick="addOption()" class="bg-blue-500 text-white px-4 py-2 rounded-md">Add Option</button>
+        <div class="mt-4">
+            <label class="block text-gray-700 font-medium mb-1">Feedback (Optional)</label>
+            <input type="text" class="border border-gray-300 rounded-md p-2 w-full">
+        </div>
+        <button onclick="showPreview()" class="bg-green-500 text-white px-4 py-2 rounded-md mt-4">Show Preview</button>
+    </div>
+    <div id="preview-container" class="bg-white shadow-md rounded-lg p-6 w-full max-w-2xl mt-6 hidden"></div>
+
+
+    <h1 class="text-4xl font-bold text-gray-800 pt-10">Comprehension App</h1>
+    <div class="bg-white rounded-lg shadow-lg p-6 w-full max-w-3xl m-6">
+        <header class="text-center mb-8">
+            
+        </header>
+        <main>
+            <section class="bg-white p-6 rounded-lg shadow-lg mb-8">
+                <h2 class="text-2xl font-semibold mb-4">Instructions</h2>
+                <p class="text-gray-700 mb-4">Read the passage below and answer the following questions. You can select the content type Comprehension from the drop-down menu. Enter the Instructions, Passage, and Media. Set the Points for the right answer. The timer can be added only for the overall Comprehension screen.</p>
+            </section>
+            <section class="bg-white p-6 rounded-lg shadow-lg mb-8">
+                <h2 class="text-2xl font-semibold mb-4">Passage</h2>
+                <textarea id="passage" class="w-full p-2 border border-gray-300 rounded mb-4" rows="5" placeholder="Enter your passage here..."></textarea>
+                <!-- <button class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700" onclick="addPassage()">Add Passage</button> -->
+            </section>
+            <section class="bg-white p-6 rounded-lg shadow-lg mb-8">
+                <h2 class="text-2xl font-semibold mb-4">Questions</h2>
+                <div id="questions-container">
+                    <div class="mb-4">
+                        <h3 class="text-xl font-semibold mb-2">1. <input type="text" class="w-full p-2 border border-gray-300 rounded" placeholder="Enter your question here..."></h3>
+                        <ul class="list-disc list-inside">
+                            <li class="mb-2"><input type="radio" name="question1" class="mr-2"><input type="text" class="w-full p-2 border border-gray-300 rounded" placeholder="Option 1"></li>
+                            <li class="mb-2"><input type="radio" name="question1" class="mr-2"><input type="text" class="w-full p-2 border border-gray-300 rounded" placeholder="Option 2"></li>
+                            <li class="mb-2"><input type="radio" name="question1" class="mr-2"><input type="text" class="w-full p-2 border border-gray-300 rounded" placeholder="Option 3"></li>
+                            <li class="mb-2"><input type="radio" name="question1" class="mr-2"><input type="text" class="w-full p-2 border border-gray-300 rounded" placeholder="Option 4"></li>
+                        </ul>
+                    </div>
+                </div>
+                <button class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700" onclick="addQuestion()">Add Question</button>
+            </section>
+            <section class="text-center pb-8">
+                <button class="bg-green-500 text-white px-6 py-3 rounded hover:bg-green-700" onclick="submitComprehension()">Submit</button>
+            </section>
+            <section id="result-section2" class="bg-white p-6 rounded-lg shadow-lg mb-8 hidden">
+                <h2 class="text-2xl font-semibold mb-4">Submitted Data</h2>
+                <div id="submitted-passage" class="mb-4"></div>
+                <div id="submitted-questions"></div>
+            </section>
+        </main>
+    </div>
+
+
+</body>
+</html>
